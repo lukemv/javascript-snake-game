@@ -2,7 +2,14 @@ const totalWidth = 32;
 const totalHeight = 32;
 const totalScale = 20; // Global Multiplier that makes things bigger.
 const frameRate = 1000;
-var actionCount = 0;
+
+let block = {
+  X: totalWidth / 2, // start center
+  Y: totalHeight / 2, // start center
+  vx: 0,
+  vy: 0,
+  size: totalScale,
+};
 
 const wrapper = document.getElementById('wrapper');
 let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -13,28 +20,21 @@ svg.setAttribute('id', "svg");
 
 wrapper.appendChild(svg);
 
-let block = {
-  X: totalWidth / 2, // start center
-  Y: totalHeight / 2, // start center
-  vx: 0,
-  vy: 0,
-  size: totalScale,
-};
+let blockElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+blockElement.setAttribute('x', block.X * block.size);
+blockElement.setAttribute('y', block.Y * block.size);
+blockElement.setAttribute('width', block.size);
+blockElement.setAttribute('height', block.size);
+blockElement.setAttribute('style', 'fill:black;stroke:white;stroke-width:1;');
+
+svg.appendChild(blockElement);
 
 const draw = () => {
-  svg.innerHTML = "";
-  block.X = block.X += block.vx;
-  block.Y = block.Y += block.vy;
-
-  var e = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  e.setAttribute('x', block.X * block.size);
-  e.setAttribute('y', block.Y * block.size);
-  e.setAttribute('width', block.size);
-  e.setAttribute('height', block.size);
-  e.setAttribute('style', 'fill:black;stroke:white;stroke-width:1;');
-
-  svg.appendChild(e)
-  console.log('[', Date().toString(), ']', block.X, ",", block.Y, actionCount);
+  block.X += block.vx;
+  block.Y += block.vy;
+  blockElement.setAttribute('x', block.X * block.size);
+  blockElement.setAttribute('y', block.Y * block.size);
+  console.log('[', Date().toString(), ']', block.X, ",", block.Y);
 };
 
 const up = () => {
@@ -58,21 +58,18 @@ const right = () => {
 };
 
 const onKeyDown = (e) => {
-  actionCount++;
-  if (e.code === "ArrowUp") {
-    up();
-  }
 
-  if (e.code === "ArrowDown") {
-    down();
-  }
+  behaviours = {
+    ArrowUp: up,
+    ArrowDown: down,
+    ArrowLeft: left,
+    ArrowRight: right
+  };
 
-  if (e.code === "ArrowLeft") {
-    left();
-  }
-
-  if (e.code === "ArrowRight") {
-    right();
+  if (Object.keys(behaviours).indexOf(e.code) !== -1) {
+    behaviours[e.code]();
+  } else {
+    console.log(`No method defined for key: ${e.key}`);
   }
 
   draw();
