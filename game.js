@@ -14,8 +14,8 @@ svg.setAttribute('id', "svg");
 wrapper.appendChild(svg);
 
 let block = {
-  X: 0,
-  Y: 0,
+  X: totalWidth / 2, // start center
+  Y: totalHeight / 2, // start center
   vx: 0,
   vy: 0,
   size: totalScale,
