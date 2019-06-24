@@ -3,12 +3,15 @@ const totalHeight = 32;
 const totalScale = 20; // Global Multiplier that makes things bigger.
 const frameRate = 1000;
 
-let block = {
-  X: totalWidth / 2, // start center
-  Y: totalHeight / 2, // start center
-  vx: 0,
-  vy: 0,
-  size: totalScale,
+const LOG = (msg) => {
+  const d = new Date
+  const format = [d.getMonth()+1,
+             d.getDate(),
+             d.getFullYear()].join('/')+' '+
+            [d.getHours(),
+             d.getMinutes(),
+             d.getSeconds()].join(':');
+  console.log("[" + format + "]" + "[INFO] " + msg);
 };
 
 const wrapper = document.getElementById('wrapper');
@@ -20,21 +23,67 @@ svg.setAttribute('id', "svg");
 
 wrapper.appendChild(svg);
 
-let blockElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-blockElement.setAttribute('x', block.X * block.size);
-blockElement.setAttribute('y', block.Y * block.size);
-blockElement.setAttribute('width', block.size);
-blockElement.setAttribute('height', block.size);
-blockElement.setAttribute('style', 'fill:black;stroke:white;stroke-width:1;');
+const createBlockElement = (x, y, size) => {
+  let el = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  el.setAttribute('x', x * size);
+  el.setAttribute('y', y * size);
+  el.setAttribute('width', size);
+  el.setAttribute('height', size);
+  el.setAttribute('style', 'fill:black;stroke:white;stroke-width:1;');
+  return el
+}
 
-svg.appendChild(blockElement);
+let block = {
+  X: totalWidth / 2, // start center
+  Y: totalHeight / 2, // start center
+  vx: 1,
+  vy: 0,
+  size: totalScale,
+  el: createBlockElement(totalWidth / 2, totalHeight / 2, totalScale)
+};
+
+const tail = [];
+
+tail.push({
+  index: 0,
+  parent: block,
+  X: (totalWidth / 2) - 1, // start one cell to the left
+  Y: totalHeight / 2, // start center
+  size: totalScale,
+  el: createBlockElement((totalWidth / 2) - 1, totalHeight / 2, totalScale)
+});
+
+tail.push({
+  index: 1,
+  parent: tail[0],
+  X: (totalWidth / 2) - 2, // start two cells to the left
+  Y: totalHeight / 2, // start center
+  size: totalScale,
+  el: createBlockElement((totalWidth / 2) - 2, totalHeight / 2, totalScale)
+});
+
+console.log(tail)
+
+svg.appendChild(block.el);
+
+tail.forEach(o => {
+  svg.appendChild(o.el);
+});
 
 const draw = () => {
+  tail.forEach(o => {
+    o.X = o.parent.X
+    o.Y = o.parent.Y
+    o.el.setAttribute('x', o.X * o.size);
+    o.el.setAttribute('y', o.Y * o.size);
+    LOG(`[${o.index}](${o.X},${o.Y}) -> (${o.parent.X}, ${o.parent.Y}, ${o.parent.index})`);
+  });
+
   block.X += block.vx;
   block.Y += block.vy;
-  blockElement.setAttribute('x', block.X * block.size);
-  blockElement.setAttribute('y', block.Y * block.size);
-  console.log('[', Date().toString(), ']', block.X, ",", block.Y);
+  block.el.setAttribute('x', block.X * block.size);
+  block.el.setAttribute('y', block.Y * block.size);
+  LOG(`(${block.X},${block.Y})`);
 };
 
 const up = () => {
@@ -69,12 +118,23 @@ const onKeyDown = (e) => {
   if (Object.keys(behaviours).indexOf(e.code) !== -1) {
     behaviours[e.code]();
   } else {
-    console.log(`No method defined for key: ${e.key}`);
+    LOG(`No method defined for key: ${e.key}`);
   }
-
-  draw();
 };
+
+const gameLoop = () => {
+  draw();
+}
+
 
 window.addEventListener('keydown', onKeyDown);
 draw(); // Initial Draw
-// window.setInterval(draw, frameRate);
+
+window.setInterval(gameLoop, frameRate);
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    message: 'Hello Vue!'
+  }
+})
